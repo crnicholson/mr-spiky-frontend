@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import { LANGUAGE_OPTIONS, languageFromFilename } from "@/lib/language";
-import { Language, Mode, Settings } from "@/lib/types";
+import { HealthResponse, Language, Mode, Settings } from "@/lib/types";
 
 type Props = {
   language: Language;
@@ -10,7 +10,8 @@ type Props = {
   settings: Settings;
   onSettingsChange: (s: Settings) => void;
   onFileLoaded: (code: string, language: Language) => void;
-  connectionOk: boolean | null;
+  health: HealthResponse | null;
+  healthError: string | null;
 };
 
 export default function TopBar({
@@ -19,7 +20,8 @@ export default function TopBar({
   settings,
   onSettingsChange,
   onFileLoaded,
-  connectionOk,
+  health,
+  healthError,
 }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -34,6 +36,14 @@ export default function TopBar({
   function setMode(mode: Mode) {
     onSettingsChange({ ...settings, mode });
   }
+
+  const dotColor = healthError
+    ? "bg-[#ff5468]"
+    : health?.mode === "mock"
+      ? "bg-[#ffb454]"
+      : health
+        ? "bg-[#3ddc84]"
+        : "bg-[#4d525c]";
 
   return (
     <header className="flex flex-wrap items-center gap-3 border-b border-[#22262b] bg-[#0a0b0d] px-4 py-2.5">
@@ -70,20 +80,20 @@ export default function TopBar({
       {settings.mode === "server" && (
         <div className="flex items-center gap-1.5">
           <span
-            className={`h-1.5 w-1.5 rounded-full ${
-              connectionOk === null
-                ? "bg-[#4d525c]"
-                : connectionOk
-                  ? "bg-[#3ddc84]"
-                  : "bg-[#ff5468]"
-            }`}
+            className={`h-1.5 w-1.5 rounded-full ${dotColor}`}
+            title={healthError ?? (health ? `mode: ${health.mode}` : "not connected")}
           />
           <input
             value={settings.serverUrl}
             onChange={(e) => onSettingsChange({ ...settings, serverUrl: e.target.value })}
-            placeholder="http://localhost:8000/compile"
-            className="w-64 rounded border border-[#22262b] bg-[#111317] px-2 py-1 font-mono text-xs text-[#e7e9ec] outline-none focus:border-[#ffb454]/60"
+            placeholder="http://localhost:8000"
+            className="w-56 rounded border border-[#22262b] bg-[#111317] px-2 py-1 font-mono text-xs text-[#e7e9ec] outline-none focus:border-[#ffb454]/60"
           />
+          {health && (
+            <span className="rounded border border-[#22262b] px-1.5 py-0.5 font-mono text-[10px] uppercase text-[#868c98]">
+              {health.mode}
+            </span>
+          )}
         </div>
       )}
 

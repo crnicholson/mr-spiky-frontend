@@ -1,3 +1,4 @@
+import { baseUrl } from "./health";
 import { CompileResult } from "./types";
 
 export async function serverCompile(
@@ -10,7 +11,7 @@ export async function serverCompile(
     throw new Error("No server URL configured");
   }
 
-  const res = await fetch(serverUrl, {
+  const res = await fetch(`${baseUrl(serverUrl)}/analyze`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ code, language }),
@@ -18,7 +19,13 @@ export async function serverCompile(
   });
 
   if (!res.ok) {
-    throw new Error(`Server responded ${res.status} ${res.statusText}`);
+    let detail: string | undefined;
+    try {
+      detail = (await res.json())?.detail;
+    } catch {
+      // response wasn't JSON — fall through to the generic message
+    }
+    throw new Error(detail ?? `Server responded ${res.status} ${res.statusText}`);
   }
 
   const data = (await res.json()) as CompileResult;
