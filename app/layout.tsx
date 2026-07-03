@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Intuition Compiler",
+  title: "Mr. Spiky, Intuition Compiler",
   description: "Paste code, get a spiking-neural-network gut reaction — no rules, just instinct.",
 };
 

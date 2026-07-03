@@ -40,7 +40,7 @@ export default function TopBar({
       <div className="mr-2 flex items-center gap-2">
         <span className="h-2 w-2 rounded-full bg-[#ffb454] shadow-[0_0_8px_#ffb454]" />
         <h1 className="font-mono text-sm font-semibold tracking-tight text-[#e7e9ec]">
-          intuition compiler
+          Mr. Spiky
         </h1>
       </div>
 
