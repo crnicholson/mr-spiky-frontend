@@ -92,6 +92,46 @@ export type LineFeedback = {
   raw_features?: RawFeatures;
 };
 
+export type HelpLineSummary = {
+  line: number;
+  score: number;
+  axes: Axes;
+  reason?: string;
+};
+
+// A "selection" is either a single line under the cursor (startLine ===
+// endLine) or a highlighted range spanning multiple lines — a lot of what
+// the SNN flags is structural and doesn't live on one line in isolation.
+export type HelpRequest = {
+  startLine: number;
+  endLine: number;
+  codeText: string;
+  lines: HelpLineSummary[];
+  functionName?: string | null;
+  lineage?: LineageEntry[];
+};
+
+export type HelpResponse = {
+  advice: string;
+  // A drop-in replacement for the whole selection. Shown to the user to
+  // copy/paste themselves — never applied to the editor automatically.
+  suggestedCode: string;
+};
+
+// A single cached fix-it request/response for one selection. Cached client
+// side (in state + localStorage) and keyed by (startLine, endLine) so it
+// survives the user clicking elsewhere or reloading the page — the whole
+// point is that the advice is still there once they go make the edit.
+export type HelpEntry = {
+  startLine: number;
+  endLine: number;
+  status: "loading" | "done" | "error";
+  advice?: string;
+  suggestedCode?: string;
+  error?: string;
+  updatedAt: number;
+};
+
 export type CompileResult = {
   verdict: string;
   dominant_axis: AxisKey | null;

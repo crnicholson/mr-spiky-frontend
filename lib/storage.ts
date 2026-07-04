@@ -1,10 +1,13 @@
-import { Language, Settings } from "./types";
+import { HelpEntry, Language, Settings } from "./types";
 
 const KEYS = {
   code: "ic.code",
   language: "ic.language",
   settings: "ic.settings",
+  helpCache: "ic.helpCache",
 };
+
+export const MAX_HELP_CACHE = 20;
 
 export const DEFAULT_SETTINGS: Settings = {
   mode: "fake",
@@ -70,4 +73,28 @@ export function loadSettings(): Settings {
 export function saveSettings(settings: Settings) {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(KEYS.settings, JSON.stringify(settings));
+}
+
+export function loadHelpCache(): HelpEntry[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(KEYS.helpCache);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    // Drop anything left mid-flight from a previous session — there's no
+    // request left to resolve it, so it would otherwise spin forever.
+    return Array.isArray(parsed) ? parsed.filter((e) => e && e.status !== "loading") : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveHelpCache(entries: HelpEntry[]) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(KEYS.helpCache, JSON.stringify(entries.slice(0, MAX_HELP_CACHE)));
+  } catch {
+    // Quota exceeded or storage disabled — the cache still lives in memory
+    // for this session, so just skip persistence.
+  }
 }
