@@ -10,33 +10,41 @@ const KEYS = {
 export const MAX_HELP_CACHE = 20;
 
 export const DEFAULT_SETTINGS: Settings = {
-  mode: "fake",
-  serverUrl: "http://localhost:8000",
+  mode: "server",
+  serverUrl: "https://api.mr-spiky.crnicholson.com",
   snnEnabled: true,
   lintEnabled: true,
+  aiEnabled: false,
+  anthropicApiKey: "",
 };
 
-const DEFAULT_CODE = `def calculate_total(items, discount=None, apply_tax=True, region="US", extra=None):
-    total = 0
-    for i in range(len(items)):
-        item = items[i]
-        if item["price"] > 0:
-            if discount != None:
-                if discount > 0:
-                    if discount < 1:
-                        total = total + (item["price"] * (1 - discount))
-                    else:
-                        total = total + item["price"]
-                else:
-                    total = total + item["price"]
-            else:
-                total = total + item["price"]
-    if apply_tax == True:
-        if region == "US":
-            total = total * 1.0725
-        elif region == "EU":
-            total = total * 1.20
-    return total
+const DEFAULT_CODE = `def SPAGHETTI_FUNCTION(x, Y):
+  global total
+  total = 0
+  Stuff = "1,2,3,4,5"
+  Stuff = Stuff.split(",")
+
+  for i in range(100):
+    try:
+      if i < len(Stuff):
+        total = total + eval(Stuff[i])
+    except:
+      pass
+
+  def inner(lst=[]):
+    lst.append(total)
+    return lst
+
+  if x == True:
+    if Y == True:
+      return inner()
+    else:
+      return None
+  else:
+    return False
+
+
+print(SPAGHETTI_FUNCTION(True, True))
 `;
 
 export function loadCode(): string {

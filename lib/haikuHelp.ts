@@ -1,10 +1,14 @@
 import { HelpRequest, HelpResponse } from "./types";
 
-export async function fetchHelp(payload: HelpRequest, signal?: AbortSignal): Promise<HelpResponse> {
+export async function fetchHelp(
+  payload: HelpRequest,
+  apiKey: string,
+  signal?: AbortSignal
+): Promise<HelpResponse> {
   const res = await fetch("/api/help", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({ ...payload, apiKey }),
     signal,
   });
 

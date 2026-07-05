@@ -1,13 +1,12 @@
 "use client";
 
-import { useRef } from "react";
-import { LANGUAGE_OPTIONS, languageFromFilename } from "@/lib/language";
-import { HealthResponse, Language, Mode, Settings } from "@/lib/types";
+import { useRef, useState } from "react";
+import { languageFromFilename } from "@/lib/language";
+import { HealthResponse, Language, Settings } from "@/lib/types";
 import MrSpikyMascot from "./MrSpikyMascot";
+import SettingsPanel from "./SettingsPanel";
 
 type Props = {
-  language: Language;
-  onLanguageChange: (l: Language) => void;
   settings: Settings;
   onSettingsChange: (s: Settings) => void;
   onFileLoaded: (code: string, language: Language) => void;
@@ -16,8 +15,6 @@ type Props = {
 };
 
 export default function TopBar({
-  language,
-  onLanguageChange,
   settings,
   onSettingsChange,
   onFileLoaded,
@@ -25,6 +22,7 @@ export default function TopBar({
   healthError,
 }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -32,10 +30,6 @@ export default function TopBar({
     const text = await file.text();
     onFileLoaded(text, languageFromFilename(file.name));
     e.target.value = "";
-  }
-
-  function setMode(mode: Mode) {
-    onSettingsChange({ ...settings, mode });
   }
 
   const dotColor = healthError
@@ -56,29 +50,6 @@ export default function TopBar({
 
       {/* Tab / toolbar strip */}
       <header className="flex flex-wrap items-center gap-2 border-b border-[color-mix(in_srgb,black_40%,transparent)] bg-(--bg-surface) px-2 py-1.5">
-        <div className="flex items-center overflow-hidden rounded-sm border border-(--border-strong)">
-          <button
-            onClick={() => setMode("fake")}
-            className={`px-3 py-1 text-xs transition-colors ${
-              settings.mode === "fake"
-                ? "bg-(--bg-base) text-(--text-bright)"
-                : "bg-(--bg-surface-alt) text-(--text-secondary) hover:text-(--text-primary)"
-            }`}
-          >
-            fake
-          </button>
-          <button
-            onClick={() => setMode("server")}
-            className={`border-l border-(--border-strong) px-3 py-1 text-xs transition-colors ${
-              settings.mode === "server"
-                ? "bg-(--bg-base) text-(--text-bright)"
-                : "bg-(--bg-surface-alt) text-(--text-secondary) hover:text-(--text-primary)"
-            }`}
-          >
-            server
-          </button>
-        </div>
-
         <div className="flex items-center gap-1.5">
           <label
             className={`flex cursor-pointer items-center gap-1.5 rounded-sm border px-2 py-1 text-xs font-medium transition-colors ${
@@ -113,36 +84,15 @@ export default function TopBar({
         </div>
 
         {settings.mode === "server" && (
-          <div className="flex items-center gap-1.5">
-            <span
-              className={`h-1.5 w-1.5 rounded-full ${dotColor}`}
-              title={healthError ?? (health ? `mode: ${health.mode}` : "not connected")}
-            />
-            <input
-              value={settings.serverUrl}
-              onChange={(e) => onSettingsChange({ ...settings, serverUrl: e.target.value })}
-              placeholder="http://localhost:8000"
-              className="w-56 rounded-sm border border-(--border) bg-(--bg-surface-alt) px-2 py-1 text-xs text-(--text-primary) outline-none focus:border-(--accent-strong)"
-            />
-            {health && (
-              <span className="rounded-sm border border-(--border-strong) px-1.5 py-0.5 font-mono text-[10px] uppercase text-(--text-secondary)">
-                {health.mode}
-              </span>
-            )}
-          </div>
+          <button
+            onClick={() => setSettingsOpen(true)}
+            className="flex items-center gap-1.5 rounded-sm border border-(--border-strong) px-2 py-1 text-xs text-(--text-secondary) hover:text-(--text-primary)"
+            title={healthError ?? (health ? `mode: ${health.mode}` : "not connected")}
+          >
+            <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${dotColor}`} />
+            server
+          </button>
         )}
-
-        <select
-          value={language}
-          onChange={(e) => onLanguageChange(e.target.value as Language)}
-          className="rounded-sm border border-(--border) bg-(--bg-surface-alt) px-2 py-1 text-xs text-(--text-primary) outline-none focus:border-(--accent-strong)"
-        >
-          {LANGUAGE_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
 
         <button
           onClick={() => fileInputRef.current?.click()}
@@ -151,7 +101,25 @@ export default function TopBar({
           Open File...
         </button>
         <input ref={fileInputRef} type="file" onChange={handleFile} className="hidden" />
+
+        <button
+          onClick={() => setSettingsOpen(true)}
+          aria-label="Settings"
+          title="Settings"
+          className="ml-auto rounded-sm border border-(--border-strong) px-2 py-1 text-xs text-(--text-secondary) transition-colors hover:text-(--text-primary)"
+        >
+          ⚙ Settings
+        </button>
       </header>
+
+      <SettingsPanel
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        settings={settings}
+        onSettingsChange={onSettingsChange}
+        health={health}
+        healthError={healthError}
+      />
     </div>
   );
 }

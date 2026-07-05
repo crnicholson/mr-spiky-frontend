@@ -37,10 +37,12 @@ export default function IntuitionCompiler() {
   const [code, setCode] = useState("");
   const [language, setLanguage] = useState<Language>("python");
   const [settings, setSettings] = useState<Settings>({
-    mode: "fake",
+    mode: "server",
     serverUrl: "",
     snnEnabled: true,
     lintEnabled: true,
+    aiEnabled: false,
+    anthropicApiKey: "",
   });
 
   const [result, setResult] = useState<CompileResult | null>(null);
@@ -213,6 +215,17 @@ export default function IntuitionCompiler() {
   // doesn't cancel an in-flight request for another.
   const handleRequestHelp = useCallback(
     (range: LineRange) => {
+      if (!settings.aiEnabled || !settings.anthropicApiKey.trim()) {
+        upsertHelpEntry({
+          startLine: range.startLine,
+          endLine: range.endLine,
+          status: "error",
+          error: "AI help is off. Enable it and add your Anthropic API key in Settings.",
+          updatedAt: Date.now(),
+        });
+        return;
+      }
+
       const key = rangeKey(range);
       helpAbortsRef.current.get(key)?.abort();
       const controller = new AbortController();
@@ -235,6 +248,7 @@ export default function IntuitionCompiler() {
           functionName: withContext?.context?.function ?? null,
           lineage: withContext?.context?.lineage,
         },
+        settings.anthropicApiKey,
         controller.signal
       )
         .then(({ advice, suggestedCode }) => {
@@ -259,7 +273,7 @@ export default function IntuitionCompiler() {
           });
         });
     },
-    [code, result, upsertHelpEntry]
+    [code, result, settings.aiEnabled, settings.anthropicApiKey, upsertHelpEntry]
   );
 
   const handleDismissHelp = useCallback((range: LineRange) => {
@@ -288,8 +302,6 @@ export default function IntuitionCompiler() {
   return (
     <div className="flex h-full flex-col bg-(--bg-base)">
       <TopBar
-        language={language}
-        onLanguageChange={setLanguage}
         settings={settings}
         onSettingsChange={setSettings}
         onFileLoaded={handleFileLoaded}

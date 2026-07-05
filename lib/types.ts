@@ -160,6 +160,10 @@ export type Settings = {
   serverUrl: string;
   snnEnabled: boolean;
   lintEnabled: boolean;
+  // AI-powered fix-it help (Claude). Off by default and BYOK — the user
+  // supplies their own Anthropic API key, stored only in localStorage.
+  aiEnabled: boolean;
+  anthropicApiKey: string;
 };
 
 export type LintSeverity = "error" | "warning";

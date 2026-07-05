@@ -99,10 +99,11 @@ function isValidLineSummary(value: unknown): value is HelpLineSummary {
   return typeof line.line === "number" && typeof line.score === "number" && isValidAxes(line.axes);
 }
 
-function isValidBody(value: unknown): value is HelpRequest {
+function isValidBody(value: unknown): value is HelpRequest & { apiKey: string } {
   if (!value || typeof value !== "object") return false;
   const body = value as Record<string, unknown>;
   return (
+    typeof body.apiKey === "string" &&
     typeof body.startLine === "number" &&
     typeof body.endLine === "number" &&
     typeof body.codeText === "string" &&
@@ -111,15 +112,10 @@ function isValidBody(value: unknown): value is HelpRequest {
   );
 }
 
+// BYOK: there is no server-side Anthropic key. Each request carries the
+// user's own key (entered in Settings, stored only in their browser) and
+// this route just forwards it to Anthropic on their behalf.
 export async function POST(request: Request) {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json(
-      { error: "ANTHROPIC_API_KEY is not configured on the server." },
-      { status: 503 }
-    );
-  }
-
   let body: unknown;
   try {
     body = await request.json();
@@ -131,7 +127,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Missing or invalid selection data." }, { status: 400 });
   }
 
-  const client = new Anthropic({ apiKey });
+  if (!body.apiKey.trim()) {
+    return NextResponse.json(
+      { error: "No Anthropic API key configured. Add one in Settings." },
+      { status: 401 }
+    );
+  }
+
+  const client = new Anthropic({ apiKey: body.apiKey });
 
   try {
     const response = await client.messages.create({
